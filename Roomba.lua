@@ -798,7 +798,7 @@ local function InitialiseSettings()
 				GetString("ROOMBA_POSITION_CHOICE", KEYBIND_STRIP_ALIGN_RIGHT),
 			},
 			default = defaults.RoombaPosition,
-			warning = GetString(ROOMBA_RELOADUI),
+			warning = GetString(SI_ADDON_MANAGER_RELOAD),
 			getFunc = function() return GetString("ROOMBA_POSITION_CHOICE", db.RoombaPosition) end,
 			setFunc = function(choice)
 				if choice == GetString("ROOMBA_POSITION_CHOICE", KEYBIND_STRIP_ALIGN_LEFT) then
@@ -883,7 +883,6 @@ local function OnAddonLoaded(_, addOnName)
 		end
 		
 		ZO_CreateStringId("SI_BINDING_NAME_RUN_ROOMBA", descriptorName)
-		ZO_CreateStringId("ROOMBA_RESCAN_BANK", "Rescan")
 		
 		InitializeSpeedRow(RoombaWindow)
 		InitializeSpeedRow(RoombaWindowGamepad)
