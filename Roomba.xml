@@ -1,0 +1,49 @@
+<GuiXml>
+	<Controls>
+
+		<!-- Keyboard UI -->
+		<TopLevelControl name="RoombaWindow" hidden="true" mouseEnabled="true">
+			<Dimensions x="565" />
+			<Anchor point="TOPLEFT" relativeTo="ZO_GuildBank" />
+			<Anchor point="BOTTOMLEFT" relativeTo="ZO_GuildBank" />
+			<Controls>
+				<Texture name="$(parent)BG" textureFile="EsoUI/Art/Miscellaneous/listItem_backdrop.dds">
+					<AnchorFill />
+					<TextureCoords left="0" right="1" top="0" bottom=".8125" />
+				</Texture>
+				<Texture name="$(parent)Icon">
+					<Dimensions x="80" y="80" />
+					<Anchor point="CENTER" relativeTo="$(parent)" />
+				</Texture>
+				<Label name="$(parent)Description" inherits="ZO_TooltipIfTruncatedLabel" font="ZoFontGameMedium" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SECOND_CONTRAST" horizontalAlignment="CENTER">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)Icon" relativePoint="BOTTOM" offsetY="5" offsetX="-300"/>
+					<Dimensions x="600" y="40" />
+				</Label>
+				<Control name="$(parent)SpeedRow" inherits="ZO_StableTrainingRow_Keyboard" />
+			</Controls>
+		</TopLevelControl>
+
+		<!-- Gamepad UI -->
+		<TopLevelControl name="RoombaWindowGamepad" hidden="true" mouseEnabled="true">
+			<Dimensions x="470" />
+			<Anchor point="TOPLEFT" relativeTo="ZO_GuildBankTopLevel_Gamepad" />
+			<Anchor point="BOTTOMLEFT" relativeTo="ZO_GuildBankTopLevel_Gamepad" />
+			<Controls>
+				<Texture name="$(parent)BG" textureFile="EsoUI/Art/Miscellaneous/listItem_backdrop.dds">
+					<AnchorFill />
+					<TextureCoords left="0" right="1" top="0" bottom=".8125" />
+				</Texture>
+				<Texture name="$(parent)Icon">
+					<Dimensions x="80" y="80" />
+					<Anchor point="CENTER" relativeTo="$(parent)" />
+				</Texture>
+				<Label name="$(parent)Description" inherits="ZO_TooltipIfTruncatedLabel" font="ZoFontGameMedium" color="INTERFACE_COLOR_TYPE_TEXT_COLORS:INTERFACE_TEXT_COLOR_SECOND_CONTRAST" horizontalAlignment="CENTER">
+					<Anchor point="TOPLEFT" relativeTo="$(parent)Icon" relativePoint="BOTTOM" offsetY="5" offsetX="-300"/>
+					<Dimensions x="600" y="40" />
+				</Label>
+				<Control name="$(parent)SpeedRow" inherits="ZO_StableTrainingRow_Keyboard" />
+			</Controls>
+		</TopLevelControl>
+
+	</Controls>
+</GuiXml>
