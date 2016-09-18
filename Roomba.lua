@@ -176,14 +176,14 @@ local function ReturnItemsToBank(_, errorCode)
 	-- Protect for fast Escape while we restack
 	if (not checkingBank) then
 		StopGBRestackAndRestartScan()
-		return false
+		return
 	end
 	
 	if errorCode == GUILD_BANK_NO_SPACE_LEFT then
 	
 		-- Stop. Guild Bank is full, User need to clean it manually		
 		StopGBRestackAndRestartScan()
-		return false
+		return
 	
 	-- Can occur if an addon has destroyed our item while we were restacking
 	elseif errorCode == GUILD_BANK_ITEM_NOT_FOUND then
@@ -841,7 +841,7 @@ local function PreHookTransferToGuildBank()
 				local proxySlot = FindFirstEmptySlotInBag(BAG_BACKPACK)
 				local stack, maxStack = GetSlotStackSize(sourceBag, slotIndex)
 				local qtyTuPush = qtyToMoveToGuildBank or 0 -- Var can be nil
-				qtyTuPush = math.min(stack, maxStack, qtyToMoveToGuildBank, qtyTuPush) -- qtyToMoveToGuildBank > maxStack too. Avoid this.
+				qtyTuPush = math.min(stack, maxStack, qtyTuPush) -- qtyToMoveToGuildBank > maxStack too. Avoid this.
 				
 				if IsProtectedFunction("RequestMoveItem") then
 					CallSecureProtected("RequestMoveItem", sourceBag, slotIndex, BAG_BACKPACK, proxySlot, qtyTuPush)
