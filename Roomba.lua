@@ -39,19 +39,6 @@ function Roomba.WorkInProgress()
 	return restackInProgress
 end
 
--- Return InstanceID of an item at slot X in a bag
-local function GetInstanceId(bag, slotId)
-
-	for i, v in pairs(bag) do
-		if v.slotIndex == slotId then
-			return v.itemInstanceId
-		end
-	end
-	
-	return
-	
-end
-
 -- Confirm slot position of a slot or return nil
 local function FindSlot(bag, slotId)
 	
@@ -406,7 +393,7 @@ local function OnGuildBankItemAdded(_, gslot)
 	-- Roomba is restacking the guild bank
 	-- Is the item added our last move ?
 	-- Get its instanceID
-	local id = GetInstanceId(SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK), gslot)
+	local id = GetItemInstanceId(BAG_GUILDBANK, gslot)
 	
 	-- Protection
 	if id ~= lastRestackResult[itemIndex][slotIndex].itemInstanceId then return end
@@ -447,13 +434,13 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
 	-- Protection
 	if (bagId == BAG_BACKPACK or bagId == BAG_VIRTUAL) and cItemDuplicateList then
 	
-		local bagData = SHARED_INVENTORY:GenerateFullSlotData(nil, bagId)
+		local id = GetItemInstanceId(bagId, slotId)
 		
 		-- Is slot really used?
-		if not GetInstanceId(bagData, slotId) then return end
+		if not id then return end
 		
 		-- Is slot == our item transferred, avoid manual transfers interfer while we restack
-		if GetInstanceId(bagData, slotId) ~= cSlot.itemInstanceId then return end
+		if id ~= cSlot.itemInstanceId then return end
 		
 		-- Set in wich bag/slot our stack is
 		cSlot.bagId = bagId
@@ -468,16 +455,16 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
 			
 			cSlotIdx, cSlot = next(cItemDuplicateList, cSlotIdx)
 			
-			local bagGuildBank = SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK)
+			local duplicateId = GetItemInstanceId(BAG_GUILDBANK, cSlot.slotId)
 			
 			-- Is slot really used?
-			if not GetInstanceId(bagGuildBank, cSlot.slotId) then
+			if not duplicateId then
 				StopGBRestackAndRestartScan()
 				return
 			end
 			
 			-- Is slot == our item transferred, avoid manual transfers interfer while we restack
-			if GetInstanceId(bagGuildBank, cSlot.slotId) ~= cSlot.itemInstanceId then
+			if duplicateId ~= cSlot.itemInstanceId then
 				StopGBRestackAndRestartScan()
 				return
 			end
