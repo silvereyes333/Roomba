@@ -757,7 +757,7 @@ local function InitialiseSettings()
 		name = ADDON_NAME,
 		displayName = ZO_HIGHLIGHT_TEXT:Colorize(ADDON_NAME),
 		author = "Wobin, CrazyDutchGuy & Ayantir",
-		version = "8",
+		version = "9",
 		slashCommand = "/roomba",
 		registerForRefresh = true,
 		registerForDefaults = true,
