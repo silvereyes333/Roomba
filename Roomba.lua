@@ -6,6 +6,8 @@
 Roomba = {}
 
 local ADDON_NAME = "Roomba"
+local ADDON_WEBSITE = "http://www.esoui.com/downloads/info402-Roomba.html"
+
 local db
 local defaults = {
 	RoombaAtGBank = true,
@@ -761,6 +763,7 @@ local function InitialiseSettings()
 		slashCommand = "/roomba",
 		registerForRefresh = true,
 		registerForDefaults = true,
+		website = ADDON_WEBSITE,
 	}
 	
 	local LAM = LibStub('LibAddonMenu-2.0')
