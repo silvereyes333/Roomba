@@ -6,6 +6,8 @@
 Roomba = {}
 
 local ADDON_NAME = "Roomba"
+local ADDON_WEBSITE = "http://www.esoui.com/downloads/info402-Roomba.html"
+
 local db
 local defaults = {
 	RoombaAtGBank = true,
@@ -37,19 +39,6 @@ local qtyToMoveToGuildBank
 -- Flag for other addons. Returns true while Roomba restacks
 function Roomba.WorkInProgress()
 	return restackInProgress
-end
-
--- Return InstanceID of an item at slot X in a bag
-local function GetInstanceId(bag, slotId)
-
-	for i, v in pairs(bag) do
-		if v.slotIndex == slotId then
-			return v.itemInstanceId
-		end
-	end
-	
-	return
-	
 end
 
 -- Confirm slot position of a slot or return nil
@@ -189,14 +178,14 @@ local function ReturnItemsToBank(_, errorCode)
 	-- Protect for fast Escape while we restack
 	if (not checkingBank) then
 		StopGBRestackAndRestartScan()
-		return false
+		return
 	end
 	
 	if errorCode == GUILD_BANK_NO_SPACE_LEFT then
 	
 		-- Stop. Guild Bank is full, User need to clean it manually		
 		StopGBRestackAndRestartScan()
-		return false
+		return
 	
 	-- Can occur if an addon has destroyed our item while we were restacking
 	elseif errorCode == GUILD_BANK_ITEM_NOT_FOUND then
@@ -406,7 +395,7 @@ local function OnGuildBankItemAdded(_, gslot)
 	-- Roomba is restacking the guild bank
 	-- Is the item added our last move ?
 	-- Get its instanceID
-	local id = GetInstanceId(SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK), gslot)
+	local id = GetItemInstanceId(BAG_GUILDBANK, gslot)
 	
 	-- Protection
 	if id ~= lastRestackResult[itemIndex][slotIndex].itemInstanceId then return end
@@ -447,13 +436,13 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
 	-- Protection
 	if (bagId == BAG_BACKPACK or bagId == BAG_VIRTUAL) and cItemDuplicateList then
 	
-		local bagData = SHARED_INVENTORY:GenerateFullSlotData(nil, bagId)
+		local id = GetItemInstanceId(bagId, slotId)
 		
 		-- Is slot really used?
-		if not GetInstanceId(bagData, slotId) then return end
+		if not id then return end
 		
 		-- Is slot == our item transferred, avoid manual transfers interfer while we restack
-		if GetInstanceId(bagData, slotId) ~= cSlot.itemInstanceId then return end
+		if id ~= cSlot.itemInstanceId then return end
 		
 		-- Set in wich bag/slot our stack is
 		cSlot.bagId = bagId
@@ -468,16 +457,16 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
 			
 			cSlotIdx, cSlot = next(cItemDuplicateList, cSlotIdx)
 			
-			local bagGuildBank = SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK)
+			local duplicateId = GetItemInstanceId(BAG_GUILDBANK, cSlot.slotId)
 			
 			-- Is slot really used?
-			if not GetInstanceId(bagGuildBank, cSlot.slotId) then
+			if not duplicateId then
 				StopGBRestackAndRestartScan()
 				return
 			end
 			
 			-- Is slot == our item transferred, avoid manual transfers interfer while we restack
-			if GetInstanceId(bagGuildBank, cSlot.slotId) ~= cSlot.itemInstanceId then
+			if duplicateId ~= cSlot.itemInstanceId then
 				StopGBRestackAndRestartScan()
 				return
 			end
@@ -770,10 +759,11 @@ local function InitialiseSettings()
 		name = ADDON_NAME,
 		displayName = ZO_HIGHLIGHT_TEXT:Colorize(ADDON_NAME),
 		author = "Wobin, CrazyDutchGuy & Ayantir",
-		version = "8",
+		version = "9",
 		slashCommand = "/roomba",
 		registerForRefresh = true,
 		registerForDefaults = true,
+		website = ADDON_WEBSITE,
 	}
 	
 	local LAM = LibStub('LibAddonMenu-2.0')
@@ -798,7 +788,7 @@ local function InitialiseSettings()
 				GetString("ROOMBA_POSITION_CHOICE", KEYBIND_STRIP_ALIGN_RIGHT),
 			},
 			default = defaults.RoombaPosition,
-			warning = GetString(ROOMBA_RELOADUI),
+			warning = GetString(SI_ADDON_MANAGER_RELOAD),
 			getFunc = function() return GetString("ROOMBA_POSITION_CHOICE", db.RoombaPosition) end,
 			setFunc = function(choice)
 				if choice == GetString("ROOMBA_POSITION_CHOICE", KEYBIND_STRIP_ALIGN_LEFT) then
@@ -854,7 +844,7 @@ local function PreHookTransferToGuildBank()
 				local proxySlot = FindFirstEmptySlotInBag(BAG_BACKPACK)
 				local stack, maxStack = GetSlotStackSize(sourceBag, slotIndex)
 				local qtyTuPush = qtyToMoveToGuildBank or 0 -- Var can be nil
-				qtyTuPush = math.min(stack, maxStack, qtyToMoveToGuildBank, qtyTuPush) -- qtyToMoveToGuildBank > maxStack too. Avoid this.
+				qtyTuPush = math.min(stack, maxStack, qtyTuPush) -- qtyToMoveToGuildBank > maxStack too. Avoid this.
 				
 				if IsProtectedFunction("RequestMoveItem") then
 					CallSecureProtected("RequestMoveItem", sourceBag, slotIndex, BAG_BACKPACK, proxySlot, qtyTuPush)
@@ -883,7 +873,6 @@ local function OnAddonLoaded(_, addOnName)
 		end
 		
 		ZO_CreateStringId("SI_BINDING_NAME_RUN_ROOMBA", descriptorName)
-		ZO_CreateStringId("ROOMBA_RESCAN_BANK", "Rescan")
 		
 		InitializeSpeedRow(RoombaWindow)
 		InitializeSpeedRow(RoombaWindowGamepad)
