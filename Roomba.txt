@@ -7,9 +7,9 @@
 ## Title: |cFFFFB0Roomba|r
 ## Description: Your Guild Bank Stacker ;)
 ## Author: Wobin & CrazyDutchGuy & Ayantir
-## Version: 11
+## Version: 12
 ## SavedVariables: ROOMBA_OPTS
-## APIVersion: 100018 100019
+## APIVersion: 100019 100020
 
 lib/LibStub/LibStub.lua
 lib/LibAddonMenu-2.0/LibAddonMenu-2.0.lua
