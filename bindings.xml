@@ -1,14 +1,14 @@
 <Bindings>
-	<Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
-		<Category name="Roomba">
-			<Action name="RUN_ROOMBA">
-				<Down>Roomba_StartRoomba()</Down>        
-			</Action>
-		</Category>
-	</Layer>
-		<Layer name="GamepadUIMode" allowFallthrough="false">
-		<Category>
-			<AllowAction name="RUN_ROOMBA"/>
-		</Category>
-	</Layer>
+    <Layer name="SI_KEYBINDINGS_LAYER_GENERAL">
+        <Category name="Roomba">
+            <Action name="RUN_ROOMBA">
+                <Down>Roomba_StartRoomba()</Down>        
+            </Action>
+        </Category>
+    </Layer>
+    <Layer name="GamepadUIMode" allowFallthrough="false">
+        <Category>
+            <AllowAction name="RUN_ROOMBA"/>
+        </Category>
+    </Layer>
 </Bindings>
