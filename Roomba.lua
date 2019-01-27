@@ -737,8 +737,6 @@ local function InitializeSpeedRow(control)
     control:GetNamedChild("SpeedRow"):GetNamedChild("BarContainer"):ClearAnchors()
     control:GetNamedChild("SpeedRow"):GetNamedChild("BarContainer"):SetAnchor(BOTTOM, control:GetNamedChild("Icon"), BOTTOM, 30, 70)
     
-    control:GetNamedChild("SpeedRow").value:SetAnchor(BOTTOM, control:GetNamedChild("Icon"), BOTTOM, 140, 85)
-    
     control:GetNamedChild("SpeedRow").value:SetFont("ZoFontHeader3")
     
 end
@@ -746,10 +744,9 @@ end
 local function InitialiseSettings()
 
     -- Fetch the saved variables
-    db = LibSavedVars:New(ADDON_NAME .. "_Account", ADDON_NAME .. "_Character", defaults, true)
-                  
-    local legacySavedVars = ZO_SavedVars:NewAccountWide('ROOMBA_OPTS', 1)
-    db:Migrate(legacySavedVars)
+    db = LibSavedVars:NewAccountWide(ADDON_NAME .. "_Account", defaults)
+                     :AddCharacterSettingsToggle(ADDON_NAME .. "_Character")
+                     :MigrateFromAccountWide( { name = 'ROOMBA_OPTS' } )
     
     if db.RoombaPosition == KEYBIND_STRIP_ALIGN_LEFT then
         keybindCheck = "leftButtons"
@@ -763,8 +760,8 @@ local function InitialiseSettings()
         type = "panel",
         name = ADDON_NAME,
         displayName = ZO_HIGHLIGHT_TEXT:Colorize(ADDON_NAME),
-        author = "Wobin, CrazyDutchGuy & Ayantir",
-        version = "15",
+        author = "Wobin, CrazyDutchGuy, Ayantir & |c99CCEFsilvereyes|r",
+        version = "16",
         slashCommand = "/roomba",
         registerForRefresh = true,
         registerForDefaults = true,

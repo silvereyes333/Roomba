@@ -1,8 +1,8 @@
 ## Title: |cFFFFB0Roomba|r
 ## Description: Your Guild Bank Stacker ;)
-## Author: Wobin & CrazyDutchGuy & Ayantir
-## Version: 15
-## APIVersion: 100024 100025
+## Author: Wobin, CrazyDutchGuy, Ayantir & |c99CCEFsilvereyes|r
+## Version: 16
+## APIVersion: 100025 100026
 ## DependsOn: LibStub LibSavedVars LibAddonMenu-2.0
 ## SavedVariables: Roomba_Account
 ## SavedVariables: Roomba_Character
