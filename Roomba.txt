@@ -1,12 +1,11 @@
-## Title: |cFFFFB0Roomba|r
+## Title: Roomba
 ## Description: Your Guild Bank Stacker ;)
-## Author: Wobin, CrazyDutchGuy, Ayantir & |c99CCEFsilvereyes|r
-## Version: 16.1
-## APIVersion: 100025 100026
-## DependsOn: LibStub LibSavedVars LibAddonMenu-2.0
+## Author: Wobin, CrazyDutchGuy, Ayantir & silvereyes
+## Version: 17.0
+## APIVersion: 100026 100027
+## DependsOn: LibSavedVars LibAddonMenu-2.0
 ## SavedVariables: Roomba_Account
 ## SavedVariables: Roomba_Character
-## SavedVariables: ROOMBA_OPTS
 
 ## This Add-On is not created by, affiliated with or sponsored by ZeniMax Media Inc. or its affiliates. 
 ## The Elder Scrolls® and related logos are registered trademarks or trademarks of ZeniMax Media Inc. in the 

@@ -3,24 +3,26 @@
 - (Thanks to BalkiTheWise for the name)
  ]]
 
-Roomba = {}
-
-local ADDON_NAME = "Roomba"
-local ADDON_WEBSITE = "http://www.esoui.com/downloads/info402-Roomba.html"
+Roomba = {
+    name = "Roomba",
+    author = "Wobin, CrazyDutchGuy, Ayantir & silvereyes",
+    version = "16.1",
+    website = "http://www.esoui.com/downloads/info402-Roomba.html",
+}
 
 local db
 local defaults = {
     RoombaAtGBank = true,
     RoombaPosition = KEYBIND_STRIP_ALIGN_LEFT,
-    dataVersion = 2,
 }
+local addon = Roomba
 local DELAY = 100
 local currentRun = {}
 local currentBank
 local checkingBank
 local restackInProgress
 local duplicates = {}
-local descriptorName = ADDON_NAME
+local descriptorName = addon.name
 local UI
 local inBagCollection = {}
 local cSlot
@@ -36,10 +38,10 @@ local lastRestackResult = {}
 local itemIndex
 local slotIndex
 local qtyToMoveToGuildBank
-local LibSavedVars = LibStub("LibSavedVars")
+local LSV = LibSavedVars or LibStub("LibSavedVars")
 
 -- Flag for other addons. Returns true while Roomba restacks
-function Roomba.WorkInProgress()
+function addon.WorkInProgress()
     return restackInProgress
 end
 
@@ -154,10 +156,12 @@ end
 -- Stop a Guild bank restack and do another scan
 local function StopGBRestackAndRestartScan()
 
+    local self = addon
+    
     -- Unregister
-    EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_TRANSFER_ERROR)
-    EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_ITEM_ADDED)
-    EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+    EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_TRANSFER_ERROR)
+    EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_ITEM_ADDED)
+    EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
     
     -- Kick off the next transaction
     StopStackingProcess()
@@ -176,6 +180,8 @@ end
 -- Called by itself
 -- Called by OnGuildBankItemAdded (EVENT_GUILD_BANK_ITEM_ADDED)
 local function ReturnItemsToBank(_, errorCode)
+    
+    local self = addon
     
     -- Protect for fast Escape while we restack
     if (not checkingBank) then
@@ -237,7 +243,7 @@ local function ReturnItemsToBank(_, errorCode)
         return
     else
         -- It's a 3rd party addon push while we were restacking, or item has been destroyed
-        Roomba.RestackGuildbank()
+        self.RestackGuildbank()
     end
     
 end
@@ -394,6 +400,8 @@ end
 -- Triggers when EVENT_GUILD_BANK_ITEM_ADDED
 local function OnGuildBankItemAdded(_, gslot)
     
+    local self = addon
+    
     -- Roomba is restacking the guild bank
     -- Is the item added our last move ?
     -- Get its instanceID
@@ -426,7 +434,7 @@ local function OnGuildBankItemAdded(_, gslot)
     
         -- Nothing else to move for this item, let's do the rest
         qtyToMoveToGuildBank = 0
-        Roomba.RestackGuildbank()
+        self.RestackGuildbank()
         
     end
     
@@ -434,6 +442,8 @@ end
 
 -- Triggers when EVENT_INVENTORY_SINGLE_SLOT_UPDATE
 local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
+    
+    local self = addon
     
     -- Protection
     if (bagId == BAG_BACKPACK or bagId == BAG_VIRTUAL) and cItemDuplicateList then
@@ -480,7 +490,7 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
             
             -- No more slots to move, let's stack them
             -- Disable ReceiveItemInBagpack, we've finished to transfer all stacks of same item
-            EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+            EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
             
             UI:GetNamedChild("Description"):SetText("Stacking " .. cSlot.name .. " in inventory")
             
@@ -489,9 +499,9 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
             
             -- These events will loop the move back to the guild bank
             -- This event is only here to "retry" if a return has fail
-            EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_TRANSFER_ERROR, ReturnItemsToBank)
+            EVENT_MANAGER:RegisterForEvent(self.name, EVENT_GUILD_BANK_TRANSFER_ERROR, ReturnItemsToBank)
             -- This event will triger the next transfer to bagpack?
-            EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_ITEM_ADDED, OnGuildBankItemAdded)
+            EVENT_MANAGER:RegisterForEvent(self.name, EVENT_GUILD_BANK_ITEM_ADDED, OnGuildBankItemAdded)
             
             -- This one is mandatory due to lags of SHARED_INVENTORY:GenerateFullSlotData
             zo_callLater(function()
@@ -516,7 +526,9 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
 end
 
 -- Restack the bank. This function is voluntary leaked to global due to an internal loop in the addon code
-function Roomba.RestackGuildbank()
+function addon.RestackGuildbank()
+    
+    local self = addon
 
     -- Protect
     if (not checkingBank) then return end
@@ -567,10 +579,10 @@ function Roomba.RestackGuildbank()
         inBagCollection = {}
         
         -- If it suddenly doesn't exist, try the next in the list (can be caused by addons which autodestroy or other transfering utilities).
-        if not FindSlot(SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK), cSlot.slotId) then zo_callLater(Roomba.RestackGuildbank, DELAY) end
+        if not FindSlot(SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK), cSlot.slotId) then zo_callLater(self.RestackGuildbank, DELAY) end
         
         -- Will trigger the function when TransferFromGuildBank will be executed
-        EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, ReceiveItemInBagpack)
+        EVENT_MANAGER:RegisterForEvent(self.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, ReceiveItemInBagpack)
         
         UI:GetNamedChild("Description"):SetText("Retrieving " .. cSlot.name .. " from Guild Bank")
         
@@ -600,18 +612,20 @@ end
 
 local function BeginStackingProcess()
 
+    local self = addon
+    
     -- What function to use ? depends on the scene
     if (SCENE_MANAGER:GetCurrentScene():GetName() == "guildBank" or SCENE_MANAGER:GetCurrentScene():GetName() == "gamepad_guild_bank") and db.RoombaAtGBank then
         -- Rescan first
         RoombaReady()
         -- Restack GuildBank
-        Roomba.RestackGuildbank()
+        self.RestackGuildbank()
     end
 
 end
 
 -- For Compatibility, can be called by other addons
-Roomba.BeginStackingProcess = BeginStackingProcess
+addon.BeginStackingProcess = BeginStackingProcess
 
 local function BeginScanningProcess()
 
@@ -653,6 +667,9 @@ local function OnGuildBankReady()
 end
 
 local function OnCloseGuildBank()
+  
+    local self = addon
+  
     if db.RoombaAtGBank then
         
         if KEYBIND_STRIP:HasKeybindButtonGroup(keybindDescriptor) then
@@ -665,21 +682,22 @@ local function OnCloseGuildBank()
         
         StopStackingProcess()
         
-        EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_ITEMS_READY)
-        EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_SELECTED)        
-        EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
-        EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_TRANSFER_ERROR)
-        EVENT_MANAGER:UnregisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_ITEM_ADDED)
+        EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_ITEMS_READY)
+        EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_SELECTED)        
+        EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE)
+        EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_TRANSFER_ERROR)
+        EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_ITEM_ADDED)
         checkingBank = false
         
     end
 end
 
 local function OnOpenGuildBank()
+    local self = addon
     if db.RoombaAtGBank then
-        EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_ITEMS_READY, OnGuildBankReady)
+        EVENT_MANAGER:RegisterForEvent(self.name, EVENT_GUILD_BANK_ITEMS_READY, OnGuildBankReady)
         -- Clear the flag when swapping banks
-        EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_GUILD_BANK_SELECTED, SelectGuildBank)
+        EVENT_MANAGER:RegisterForEvent(self.name, EVENT_GUILD_BANK_SELECTED, SelectGuildBank)
     end
 end
 
@@ -743,10 +761,11 @@ end
 
 local function InitialiseSettings()
 
+    local self = addon
+
     -- Fetch the saved variables
-    db = LibSavedVars:NewAccountWide(ADDON_NAME .. "_Account", defaults)
-                     :AddCharacterSettingsToggle(ADDON_NAME .. "_Character")
-                     :MigrateFromAccountWide( { name = 'ROOMBA_OPTS' } )
+    db = LSV:NewAccountWide(self.name .. "_Account", defaults)
+            :AddCharacterSettingsToggle(self.name .. "_Character")
     
     if db.RoombaPosition == KEYBIND_STRIP_ALIGN_LEFT then
         keybindCheck = "leftButtons"
@@ -758,17 +777,17 @@ local function InitialiseSettings()
     
     local panelData = {
         type = "panel",
-        name = ADDON_NAME,
-        displayName = ZO_HIGHLIGHT_TEXT:Colorize(ADDON_NAME),
-        author = "Wobin, CrazyDutchGuy, Ayantir & |c99CCEFsilvereyes|r",
-        version = "16.1",
+        name = self.name,
+        displayName = self.name,
+        author = self.author,
+        version = self.version,
         slashCommand = "/roomba",
         registerForRefresh = true,
         registerForDefaults = true,
-        website = ADDON_WEBSITE,
+        website = self.website,
     }
     
-    local LAM = LibStub('LibAddonMenu-2.0')
+    local LAM = LibAddonMenu2 or LibStub("LibAddonMenu-2.0")
     LAM:RegisterAddonPanel("RoombaOptions", panelData)
     
     local optionsTable = {
@@ -872,7 +891,9 @@ end
 
 local function OnAddonLoaded(_, addOnName)
     
-    if addOnName == ADDON_NAME then
+    local self = addon
+    
+    if addOnName == self.name then
     
         if IsInGamepadPreferredMode() then
             defaults.RoombaPosition = KEYBIND_STRIP_ALIGN_CENTER
@@ -889,12 +910,12 @@ local function OnAddonLoaded(_, addOnName)
         PreHookTransferToGuildBank()
         
         -- Set the function to run when guild bank is opened (before guild bank is ready)
-        EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_OPEN_GUILD_BANK, OnOpenGuildBank)
+        EVENT_MANAGER:RegisterForEvent(self.name, EVENT_OPEN_GUILD_BANK, OnOpenGuildBank)
         
         -- Set the function to run when guild bank is closed
-        EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_CLOSE_GUILD_BANK, OnCloseGuildBank)
+        EVENT_MANAGER:RegisterForEvent(self.name, EVENT_CLOSE_GUILD_BANK, OnCloseGuildBank)
     end
     
 end
 
-EVENT_MANAGER:RegisterForEvent(ADDON_NAME, EVENT_ADD_ON_LOADED, OnAddonLoaded)
+EVENT_MANAGER:RegisterForEvent(addon.name, EVENT_ADD_ON_LOADED, OnAddonLoaded)
