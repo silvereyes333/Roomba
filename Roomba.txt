@@ -1,9 +1,9 @@
 ## Title: Roomba
 ## Description: Your Guild Bank Stacker ;)
 ## Author: Wobin, CrazyDutchGuy, Ayantir & silvereyes
-## Version: 17.0.2
-## APIVersion: 100029 100030
-## DependsOn: LibSavedVars LibAddonMenu-2.0
+## Version: 17.0.3
+## APIVersion: 100030 100031
+## DependsOn: LibSavedVars>=50000 LibAddonMenu-2.0
 ## SavedVariables: Roomba_Account
 ## SavedVariables: Roomba_Character
 

@@ -6,7 +6,7 @@
 Roomba = {
     name = "Roomba",
     author = "Wobin, CrazyDutchGuy, Ayantir & silvereyes",
-    version = "17.0.2",
+    version = "17.0.3",
     website = "http://www.esoui.com/downloads/info402-Roomba.html",
 }
 
@@ -38,7 +38,6 @@ local lastRestackResult = {}
 local itemIndex
 local slotIndex
 local qtyToMoveToGuildBank
-local LSV = LibSavedVars or LibStub("LibSavedVars")
 
 -- Flag for other addons. Returns true while Roomba restacks
 function addon.WorkInProgress()
@@ -764,8 +763,12 @@ local function InitialiseSettings()
     local self = addon
 
     -- Fetch the saved variables
-    db = LSV:NewAccountWide(self.name .. "_Account", defaults)
-            :AddCharacterSettingsToggle(self.name .. "_Character")
+    db = LibSavedVars:NewAccountWide(self.name .. "_Account", defaults)
+                     :AddCharacterSettingsToggle(self.name .. "_Character")
+    
+    if LSV_Data.EnableDefaultsTrimming then
+        db:EnableDefaultsTrimming()
+    end
     
     if db.RoombaPosition == KEYBIND_STRIP_ALIGN_LEFT then
         keybindCheck = "leftButtons"
