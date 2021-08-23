@@ -6,8 +6,9 @@
 Roomba = {
     name = "Roomba",
     author = "Wobin, CrazyDutchGuy, Ayantir & silvereyes",
-    version = "17.0.7",
+    version = "17.0.8",
     website = "http://www.esoui.com/downloads/info402-Roomba.html",
+    debugMode = false,
 }
 
 local db
@@ -38,22 +39,17 @@ local lastRestackResult = {}
 local itemIndex
 local slotIndex
 local qtyToMoveToGuildBank
+local Debug
+
+function Debug(message)
+    if Roomba.debugMode then
+        d("[RB-DEBUG] " .. message)
+    end
+end
 
 -- Flag for other addons. Returns true while Roomba restacks
 function addon.WorkInProgress()
     return restackInProgress
-end
-
--- Confirm slot position of a slot or return nil
-local function FindSlot(bag, slotId)
-    
-    for i, v in pairs(bag) do
-        -- Found our slot
-        if v.slotIndex == slotId then return true end
-    end
-    
-    return
-    
 end
 
 -- Scan in a stackable bag
@@ -141,6 +137,7 @@ end
 
 local function StopStackingProcess()
 
+    Debug("StopStackingProcess()")
     cInstanceId = nil
     cSlotIdx = nil
     cSlot = nil
@@ -156,6 +153,7 @@ end
 local function StopGBRestackAndRestartScan()
 
     local self = addon
+    Debug("StopGBRestackAndRestartScan()")
     
     -- Unregister
     EVENT_MANAGER:UnregisterForEvent(self.name, EVENT_GUILD_BANK_TRANSFER_ERROR)
@@ -181,6 +179,7 @@ end
 local function ReturnItemsToBank(_, errorCode)
     
     local self = addon
+    Debug("ReturnItemsToBank(_, " .. tostring(errorCode) .. ")")
     
     -- Protect for fast Escape while we restack
     if (not checkingBank) then
@@ -205,6 +204,7 @@ local function ReturnItemsToBank(_, errorCode)
             -- yes, try to move it
             slotIndex = slotIndex + 1
             
+            Debug("zo_callLater(ReturnItemsToBank, " .. tostring(DELAY) .. "), slotIndex=" .. tostring(slotIndex) .. ", itemIndex=" .. tostring(itemIndex))
             zo_callLater(ReturnItemsToBank, DELAY)
             
         -- No more stack. Maybe another item?
@@ -213,10 +213,12 @@ local function ReturnItemsToBank(_, errorCode)
             itemIndex = itemIndex + 1
             slotIndex = 1
             
+            Debug("zo_callLater(ReturnItemsToBank, " .. tostring(DELAY) .. "), slotIndex=1, itemIndex=" .. tostring(itemIndex))
             zo_callLater(ReturnItemsToBank, DELAY)
             
         else
             -- Nothing to move
+            Debug("Nothing to move. Stop.")
             return
         end
     -- Can occur if an addon has destroyed our item while we were restacking
@@ -227,21 +229,25 @@ local function ReturnItemsToBank(_, errorCode)
         waitingRetries = waitingRetries + 1
         if waitingRetries < 10 then
             UI:GetNamedChild("Description"):SetText("Guild bank busy, trying to return restacked " .. cSlot.name .. " to the Guild Bank again")
+            Debug("zo_callLater(ReturnItemsToBank, " .. tostring(DELAY * 5) .. "), slotIndex=" .. tostring(slotIndex) .. ", itemIndex=" .. tostring(itemIndex) .. ", waitingRetries=" .. tostring(waitingRetries))
             zo_callLater(ReturnItemsToBank, DELAY * 5) -- Should be long, Guild Bank can be busy for 3-5s quite often
         else
             StopGBRestackAndRestartScan()
         end
-    elseif FindSlot(SHARED_INVENTORY:GenerateFullSlotData(nil, lastRestackResult[itemIndex][slotIndex].bagId), lastRestackResult[itemIndex][slotIndex].slotId) then
+    elseif SHARED_INVENTORY:GenerateSingleSlotData(lastRestackResult[itemIndex][slotIndex].bagId, lastRestackResult[itemIndex][slotIndex].slotId) then
         UI:GetNamedChild("Description"):SetText("Returning restacked " .. cSlot.name .. " to the Guild Bank")
         TransferToGuildBank(lastRestackResult[itemIndex][slotIndex].bagId, lastRestackResult[itemIndex][slotIndex].slotId)
+        Debug("TransferToGuildBank(" .. tostring(lastRestackResult[itemIndex][slotIndex].bagId) .. ", " .. tostring(lastRestackResult[itemIndex][slotIndex].slotId) .. ")")
         -- It will trigger .BankItemsReceived because of EVENT_GUILD_BANK_ITEM_ADDED
         -- It will trigger ReturnItemsToBank if an error has occured
     -- Another error
     elseif errorCode then
+        Debug("No error code. Stop.")
         -- Not handled yet, stop
         return
     else
         -- It's a 3rd party addon push while we were restacking, or item has been destroyed
+        Debug("Third party addon, or item destroyed. RestackGuildbank().")
         self.RestackGuildbank()
     end
     
@@ -251,6 +257,7 @@ local function RestackStackableBag(bagId, duplicateList)
     
     local result = {}
     local indexItemsDuplicated, dataItems = next(duplicateList)
+    Debug("RestackStackableBag(" .. tostring(bagId) .. ", " .. tostring(duplicateList) .. ")")
     
     if bagId == BAG_BACKPACK then
 
@@ -288,8 +295,10 @@ local function RestackStackableBag(bagId, duplicateList)
                         
                         -- Merging
                         if IsProtectedFunction("RequestMoveItem") then
+                            Debug("CallSecureProtected(\"RequestMoveItem\", " .. tostring(bagId) .. ", " .. tostring(itemInfo.slotId) .. ", " .. tostring(bagId) .. ", " .. tostring(baseSlot.slotId) .. ", " .. tostring(qty) .. ")")
                             CallSecureProtected("RequestMoveItem", bagId, itemInfo.slotId, bagId, baseSlot.slotId, qty)
                         else
+                            Debug("RequestMoveItem(" .. tostring(bagId) .. ", " .. tostring(itemInfo.slotId) .. ", " .. tostring(bagId) .. ", " .. tostring(baseSlot.slotId) .. ", " .. tostring(qty) .. ")")
                             RequestMoveItem(bagId, itemInfo.slotId, bagId, baseSlot.slotId, qty)
                         end
                         
@@ -317,8 +326,10 @@ local function RestackStackableBag(bagId, duplicateList)
                         
                         -- Merging
                         if IsProtectedFunction("RequestMoveItem") then
+                            Debug("CallSecureProtected(\"RequestMoveItem\", " .. tostring(bagId) .. ", " .. tostring(itemInfo.slotId) .. ", " .. tostring(bagId) .. ", " .. tostring(baseSlot.slotId) .. ", " .. tostring(qty) .. ")")
                             CallSecureProtected("RequestMoveItem", bagId, itemInfo.slotId, bagId, baseSlot.slotId, qty)
                         else
+                            Debug("RequestMoveItem(" .. tostring(bagId) .. ", " .. tostring(itemInfo.slotId) .. ", " .. tostring(bagId) .. ", " .. tostring(baseSlot.slotId) .. ", " .. tostring(qty) .. ")")
                             RequestMoveItem(bagId, itemInfo.slotId, bagId, baseSlot.slotId, qty)
                         end
                         
@@ -400,6 +411,7 @@ end
 local function OnGuildBankItemAdded(_, gslot)
     
     local self = addon
+    Debug("OnGuildBankItemAdded(_, " .. tostring(gslot) .. ")")
     
     -- Roomba is restacking the guild bank
     -- Is the item added our last move ?
@@ -418,6 +430,7 @@ local function OnGuildBankItemAdded(_, gslot)
         -- yes, try to move it
         qtyToMoveToGuildBank = qtyToMoveToGuildBank - lastRestackResult[itemIndex][slotIndex].stack
         slotIndex = slotIndex + 1
+        Debug("zo_callLater(ReturnItemsToBank, " .. tostring(DELAY) .. "), slotIndex=1, itemIndex=" .. tostring(itemIndex))
         zo_callLater(ReturnItemsToBank, DELAY)
         
     -- No more stack. Maybe another item? - Should not happen , because there is only 1 item in .lastRestackResult, the others items are in duplicates
@@ -427,12 +440,14 @@ local function OnGuildBankItemAdded(_, gslot)
         itemIndex = itemIndex + 1
         slotIndex = 1
         qtyToMoveToGuildBank = 0
+        Debug("zo_callLater(ReturnItemsToBank, " .. tostring(DELAY) .. "), slotIndex=1, itemIndex=" .. tostring(itemIndex))
         zo_callLater(ReturnItemsToBank, DELAY)
         
     else
     
         -- Nothing else to move for this item, let's do the rest
         qtyToMoveToGuildBank = 0
+        Debug("RestackGuildbank()")
         self.RestackGuildbank()
         
     end
@@ -443,6 +458,7 @@ end
 local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
     
     local self = addon
+    Debug("ReceiveItemInBagpack(_, " .. tostring(bagId) .. ", " .. tostring(slotId) .. ", _, _, _, " .. tostring(stackCountChange) .. ")")
     
     -- Protection
     if (bagId == BAG_BACKPACK or bagId == BAG_VIRTUAL) and cItemDuplicateList then
@@ -483,6 +499,7 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
             end
             
             -- The TransferFromGuildBank will execute ReceiveItemInBagpack because of registration
+            Debug("TransferFromGuildBank(" .. tostring(cSlot.slotId) .. ")")
             TransferFromGuildBank(cSlot.slotId)
             
         else
@@ -503,6 +520,7 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
             EVENT_MANAGER:RegisterForEvent(self.name, EVENT_GUILD_BANK_ITEM_ADDED, OnGuildBankItemAdded)
             
             -- This one is mandatory due to lags of SHARED_INVENTORY:GenerateFullSlotData
+            Debug("zo_callLater(function() { ... }, " .. tostring(DELAY) .. ")")
             zo_callLater(function()
             
                 --Init
@@ -511,8 +529,9 @@ local function ReceiveItemInBagpack(_, bagId, slotId, _, _, _, stackCountChange)
                 
                 -- No errors, is our item here ?
                 
-                if FindSlot(SHARED_INVENTORY:GenerateFullSlotData(nil, bagId), lastRestackResult[itemIndex][slotIndex].slotId) then
+                if lastRestackResult[itemIndex][slotIndex] and SHARED_INVENTORY:GenerateSingleSlotData(bagId, lastRestackResult[itemIndex][slotIndex].slotId) and UI and UI:GetNamedChild("Description") and cSlot then
                     UI:GetNamedChild("Description"):SetText("Returning restacked " .. cSlot.name .. " to the Guild Bank")
+                    Debug("TransferToGuildBank(" .. tostring(bagId) .. ", " .. tostring(lastRestackResult[itemIndex][slotIndex].slotId) .. ")")
                     TransferToGuildBank(bagId, lastRestackResult[itemIndex][slotIndex].slotId)
                     -- It will trigger OnGuildBankItemAdded because of EVENT_GUILD_BANK_ITEM_ADDED
                     -- It will trigger ReturnItemsToBank if an error has occured
@@ -528,6 +547,7 @@ end
 function addon.RestackGuildbank()
     
     local self = addon
+    Debug("RestackGuildbank()")
 
     -- Protect
     if (not checkingBank) then return end
@@ -578,7 +598,7 @@ function addon.RestackGuildbank()
         inBagCollection = {}
         
         -- If it suddenly doesn't exist, try the next in the list (can be caused by addons which autodestroy or other transfering utilities).
-        if not FindSlot(SHARED_INVENTORY:GenerateFullSlotData(nil, BAG_GUILDBANK), cSlot.slotId) then zo_callLater(self.RestackGuildbank, DELAY) end
+        if not SHARED_INVENTORY:GenerateSingleSlotData(BAG_GUILDBANK, cSlot.slotId) then zo_callLater(self.RestackGuildbank, DELAY) end
         
         -- Will trigger the function when TransferFromGuildBank will be executed
         EVENT_MANAGER:RegisterForEvent(self.name, EVENT_INVENTORY_SINGLE_SLOT_UPDATE, ReceiveItemInBagpack)
@@ -586,6 +606,7 @@ function addon.RestackGuildbank()
         UI:GetNamedChild("Description"):SetText("Retrieving " .. cSlot.name .. " from Guild Bank")
         
         -- Take a stack from bank, it will trigger ReceiveItemInBagpack
+        Debug("TransferFromGuildBank(" .. tostring(cSlot.slotId) .. ")")
         TransferFromGuildBank(cSlot.slotId)
         
     else
@@ -644,6 +665,7 @@ local function SelectGuildBank(_, guildBankId)
 end
 
 local function OnGuildBankReallyReady()
+    Debug("OnGuildBankReallyReady()")
 
     -- Limit calls to RoombaReady()
     if not checkingBank then
@@ -867,7 +889,9 @@ local function PreHookTransferToGuildBank()
     -- Bug sometimes, so let's use the backpack for every move
     local original_TransferToGuildBank = TransferToGuildBank
     local function TransferToGuildBankByBackpack(sourceBag, slotIndex)
+      
         if IsGuildBankOpen() and sourceBag == BAG_VIRTUAL then
+            Debug("TransferToGuildBankByBackpack(" .. tostring(sourceBag) .. ", " .. tostring(slotIndex) .. ")")
             if GetNumBagFreeSlots(BAG_BACKPACK) >= 1 and GetNumBagFreeSlots(BAG_GUILDBANK) >= 1 then
                 local proxySlot = FindFirstEmptySlotInBag(BAG_BACKPACK)
                 local stack, maxStack = GetSlotStackSize(sourceBag, slotIndex)
@@ -875,8 +899,10 @@ local function PreHookTransferToGuildBank()
                 qtyTuPush = math.min(stack, maxStack, qtyTuPush) -- qtyToMoveToGuildBank > maxStack too. Avoid this.
                 
                 if IsProtectedFunction("RequestMoveItem") then
+                    Debug("CallSecureProtected(\"RequestMoveItem\", " .. tostring(sourceBag) .. ", " .. tostring(slotIndex) .. ", " .. tostring(BAG_BACKPACK) .. ", " .. tostring(proxySlot) .. ", " .. tostring(qtyTuPush) .. ")")
                     CallSecureProtected("RequestMoveItem", sourceBag, slotIndex, BAG_BACKPACK, proxySlot, qtyTuPush)
                 else
+                    Debug("RequestMoveItem(" .. tostring(sourceBag) .. ", " .. tostring(slotIndex) .. ", " .. tostring(BAG_BACKPACK) .. ", " .. tostring(proxySlot) .. ", " .. tostring(qtyTuPush) .. ")")
                     RequestMoveItem(sourceBag, slotIndex, BAG_BACKPACK, proxySlot, qtyTuPush)
                 end
                 
